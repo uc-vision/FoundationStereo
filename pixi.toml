@@ -1,0 +1,27 @@
+[workspace]
+channels = ["conda-forge", "robostack-staging"]
+name = "pruning_workspace"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+python = "3.11.11.*"
+numpy = "1.26.4.*"
+ros-humble-desktop-full = ">=0.10.0,<0.11"
+colcon-core = ">=0.19.0,<0.20"
+ros-humble-moveit = ">=2.5.7,<3"
+gazebo = ">=11.15.1,<12"
+ros-humble-gazebo-ros = ">=3.7.0,<4"
+ros-humble-gazebo-ros-pkgs = ">=3.7.0,<4"
+rosdep = ">=0.25.1,<0.26"
+colcon-common-extensions = ">=0.3.0,<0.4"
+ros-humble-gazebo-ros2-control = ">=0.4.10,<0.5"
+ros-humble-control-toolbox = ">=3.4.0,<4"
+ros-humble-controller-manager = ">=2.47.0,<3"
+ros-humble-moveit-servo = ">=2.5.7,<3"
+ros-humble-hardware-interface = ">=2.47.0,<3"
+ros-humble-controller-manager-msgs = ">=2.47.0,<3"
+ros-humble-joint-trajectory-controller = ">=2.40.0,<3"
+ros-humble-joint-state-broadcaster = ">=2.40.0,<3"

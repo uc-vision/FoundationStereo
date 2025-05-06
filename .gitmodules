@@ -1,0 +1,6 @@
+[submodule "src/xarm_ros2"]
+	path = src/xarm_ros2
+	url = git@github.com:drewdewet/xarm_ros2.git
+[submodule "src/robotic_arm"]
+	path = src/robotic_arm
+	url = git@github.com:uc-vision/robotic_arm.git
