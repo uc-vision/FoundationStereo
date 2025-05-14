@@ -19,3 +19,6 @@
 [submodule "src/splat-viewer"]
 	path = src/splat-viewer
 	url = git@github.com:uc-vision/splat-viewer.git
+[submodule "src/taichi-splatting"]
+	path = src/taichi-splatting
+	url = git@github.com:uc-vision/taichi-splatting.git

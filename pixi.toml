@@ -35,6 +35,24 @@ ros-humble-zstd-point-cloud-transport = ">=1.0.11,<2"
 ros-humble-robot-localization = ">=3.5.3,<4"
 ros-humble-diagnostic-updater = ">=4.0.0,<5"
 opencv = ">=4.10.0,<5"
+cuda = "12.6.*"
+pycolmap = ">=3.11"
+ninja = ">=1.12.1,<2"
+matplotlib = ">=3.10.0,<4"
+
+[pypi-options]
+index-url = "https://pypi.org/simple"
+no-build-isolation = ["fused-ssim"]
+extra-index-urls = ["https://maara:CanterburySharks3741@cropvision.canterbury.ac.nz/pypi/simple"]
 
 [pypi-dependencies]
 py-structs = ">=1.1.0,<4"
+splat-viewer = { path = "./splat-viewer", editable = true }
+taichi-splatting = { path = "./taichi-splatting", editable = true }
+torch = { version = "==2.6.0", index = "https://download.pytorch.org/whl/cu126" }
+torchvision = { version = ">=0.21.0", index = "https://download.pytorch.org/whl/cu126" }
+fused-ssim = { git = "https://github.com/uc-vision/fused-ssim.git", rev = "613400e" }
+
+[system-requirements]
+cuda = "12.1"
+libc = { family = "glibc", version = "2.31" }
