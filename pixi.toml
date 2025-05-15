@@ -28,7 +28,6 @@ ros-humble-joint-state-broadcaster = ">=2.40.0,<3"
 quaternion = ">=2024.0.8,<2025"
 pip = ">=25.1.1,<26"
 pyassimp = ">=5.2.5,<6"
-open3d = ">=0.19.0,<0.20"
 colourmap = ">=1.1.21,<2"
 ros-humble-geographic-msgs = ">=1.0.6,<2"
 ros-humble-zstd-point-cloud-transport = ">=1.0.11,<2"
@@ -43,15 +42,17 @@ matplotlib = ">=3.10.0,<4"
 [pypi-options]
 index-url = "https://pypi.org/simple"
 no-build-isolation = ["fused-ssim"]
-extra-index-urls = ["https://maara:CanterburySharks3741@cropvision.canterbury.ac.nz/pypi/simple"]
+extra-index-urls = ["http://csse-maaratech1.canterbury.ac.nz:4040/maara/cstack/+simple/"]
 
 [pypi-dependencies]
 py-structs = ">=1.1.0,<4"
-splat-viewer = { path = "./splat-viewer", editable = true }
-taichi-splatting = { path = "./taichi-splatting", editable = true }
+splat-viewer = { path = "src/splat-viewer", editable = true }
+taichi-splatting = { path = "src/taichi-splatting", editable = true }
 torch = { version = "==2.6.0", index = "https://download.pytorch.org/whl/cu126" }
 torchvision = { version = ">=0.21.0", index = "https://download.pytorch.org/whl/cu126" }
 fused-ssim = { git = "https://github.com/uc-vision/fused-ssim.git", rev = "613400e" }
+small-gicp = "*"
+open3d = ">=0.19.0,<0.20"
 
 [system-requirements]
 cuda = "12.1"
