@@ -16,3 +16,15 @@
 [submodule "src/zed_interfaces"]
 	path = src/zed_interfaces
 	url = git@github.com:stereolabs/zed-ros2-interfaces.git
+[submodule "src/splat-viewer"]
+	path = src/splat-viewer
+	url = git@github.com:uc-vision/splat-viewer.git
+[submodule "src/taichi-splatting"]
+	path = src/taichi-splatting
+	url = git@github.com:uc-vision/taichi-splatting.git
+[submodule "GS-localisation"]
+	path = GS-localisation
+	url = git@github.com:uc-vision/GS-localisation.git
+[submodule "src/GS-localisation"]
+	path = src/GS-localisation
+	url = git@github.com:uc-vision/GS-localisation.git
