@@ -22,3 +22,6 @@
 [submodule "src/taichi-splatting"]
 	path = src/taichi-splatting
 	url = git@github.com:uc-vision/taichi-splatting.git
+[submodule "GS-localisation"]
+	path = GS-localisation
+	url = git@github.com:uc-vision/GS-localisation.git
