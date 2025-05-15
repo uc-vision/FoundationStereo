@@ -25,3 +25,6 @@
 [submodule "GS-localisation"]
 	path = GS-localisation
 	url = git@github.com:uc-vision/GS-localisation.git
+[submodule "src/GS-localisation"]
+	path = src/GS-localisation
+	url = git@github.com:uc-vision/GS-localisation.git
