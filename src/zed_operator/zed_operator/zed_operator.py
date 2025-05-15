@@ -83,9 +83,39 @@ class ZedOperaterNode(Node):
             self.fused_cloud_client.call_async(req)
 
             self.get_logger().info("Sent fused cloud")
+            self.save_cloud_as_o3d(self.latest_fused_point_cloud)
             return response
         return self.create_service(TimedCloud, '/fused_cloud_over_time', fused_point_cloud_timed, callback_group=self.serv_cb_group)
 
+
+    def save_cloud_as_o3d(self, cloud_msg):
+        pc_data = pc2.read_points(cloud_msg, skip_nans=True, field_names=("x", "y", "z", "rgb"))
+        points = []
+        colors = []
+
+        for p in pc_data:
+            points.append([p[0], p[1], p[2]])
+
+            if len(p) >= 4:
+                rgb = p[3]
+                s = struct.pack('>f', rgb)
+                i = struct.unpack('>l', s)[0]
+                r = (i >> 16) & 0x0000ff
+                g = (i >> 8) & 0x0000ff
+                b = i & 0x0000ff
+                colors.append([r/255.0, g/255.0, b/255.0])
+            else:
+                colors.append([0.5, 0.5, 0.5])
+
+        o3d_pc = o3d.geometry.PointCloud()
+        o3d_pc.points = o3d.utility.Vector3dVector(np.array(points))
+        
+        if colors:
+            o3d_pc.colors = o3d.utility.Vector3dVector(np.array(colors))
+            
+        pc_path = '/local/zed_outs/fused_cloud_example.ply'
+        o3d.io.write_point_cloud(pc_path, o3d_pc)
+        return
 
 
 def main(args=None):
