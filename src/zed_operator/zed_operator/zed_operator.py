@@ -4,6 +4,7 @@ from rclpy.executors import MultiThreadedExecutor
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from sensor_msgs.msg import Image, PointCloud2
 import sensor_msgs_py.point_cloud2 as pc2
+from std_srvs.srv import Trigger
 from cv_bridge import CvBridge
 import cv2
 import numpy as np
@@ -15,7 +16,11 @@ import struct
 import open3d as o3d
 from std_srvs.srv import SetBool
 import pickle
+import open3d as o3d
 from arm_interfaces.srv import TimedCloud
+from tf2_ros import Buffer, TransformListener
+from tf2_ros import LookupException, ConnectivityException, ExtrapolationException
+from rclpy.time import Time
 
 
 class ZedOperaterNode(Node):
@@ -31,8 +36,8 @@ class ZedOperaterNode(Node):
         
         self.depth_sub = self.create_subscription(Image, '/zed/zed_node/depth/depth_registered', self.depth_callback, depth_qos)
         self.fused_cloud = self.create_subscription(PointCloud2, '/zed/zed_node/mapping/fused_cloud', self.fused_cloud_callback, depth_qos)
-        # self.colour_image = self.create_subscription(Image, '/zed/zed_node/right/image_rect_color', self.colour_image_callback, depth_qos)
-        # self.point_cloud = self.create_subscription(PointCloud2, '/zed/zed_node/point_cloud/cloud_registered', self.point_cloud_callback, depth_qos)
+        self.colour_image = self.create_subscription(Image, '/zed/zed_node/right/image_rect_color', self.colour_image_callback, depth_qos)
+        self.point_cloud = self.create_subscription(PointCloud2, '/zed/zed_node/point_cloud/cloud_registered', self.point_cloud_callback, depth_qos)
         
         self.get_logger().info('1')
         self.fused_cloud_client = self.create_client(SetBool, '/zed/zed_node/enable_mapping')
@@ -41,29 +46,111 @@ class ZedOperaterNode(Node):
         self.fused_cloud_client.call_async(req)
         self.get_logger().info("Made mapping toggle serv and turned off")
 
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
+
         self.bridge = CvBridge()
+        self.save_dir = '~/zed_out/'
         
         self.want_depth_image = False
         self.latest_depth_image = None
         self.want_fused_cloud = False
         self.latest_fused_point_cloud = None
+        self.want_colour_image = None
+        self.latest_colour_image = None
+        self.want_point_cloud = None
+        self.latest_point_cloud = None
 
         self.fused_point_cloud_timed_service()
+        self.zed_snapshot_service()
 
         self.get_logger().info("Zed operator node initialised")
 
     
+    # Zed cam topic subscribers
     def depth_callback(self, msg):
         if not self.want_depth_image:
             return
         self.latest_depth_image = msg
         self.want_depth_image = False
 
+    def colur_image_callback(self, msg):
+        if not self.want_colour_image:
+            return
+        self.latest_colour_image = msg
+        self.want_colour_image = False
+
+    def point_cloud_callback(self, msg):
+        if not self.want_point_cloud:
+            return
+        self.latest_point_cloud = msg
+        self.want_point_cloud = False
+
     def fused_cloud_callback(self, msg):
         if not self.want_fused_cloud:
             return
         self.latest_fused_point_cloud = msg
 
+
+    # save zed data at time of service call
+    def zed_snapshot_service(self):
+        def zed_snapshot(request, response):
+            try:
+                self.want_colour_image = True
+                self.want_depth_image = True
+                self.want_point_cloud = True
+
+                # get enu to zed cam transform
+                now = Time()
+                trans = self.tf_buffer.lookup_transform(
+                target_frame='zcam_link',
+                source_frame='local_enu',
+                time=now
+                )
+                self.get_logger().info(
+                f"Got transform at time {trans.header.stamp.sec}.{trans.header.stamp.nanosec:09d}: "
+                f"translation = ({trans.transform.translation.x:.3f}, "
+                f"{trans.transform.translation.y:.3f}, "
+                f"{trans.transform.translation.z:.3f}), "
+                f"rotation (quat) = ({trans.transform.rotation.x:.3f}, "
+                f"{trans.transform.rotation.y:.3f}, "
+                f"{trans.transform.rotation.z:.3f}, "
+                f"{trans.transform.rotation.w:.3f})"
+                )
+
+                # save locally
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")                
+
+                cv_depth_path = os.path.join(self.save_dir, f"depth_cv_{timestamp}.npy")
+                cv_depth = self.bridge.imgmsg_to_cv2(self.latest_depth_image, desired_encoding='32FC1')
+                np.save(cv_depth_path, cv_depth)
+
+                raw_depth_path = os.path.join(self.save_dir, f"depth_raw_{timestamp}.pkl")
+                with open(raw_depth_path, 'wb') as f:
+                    pickle.dump(self.latest_depth_image, f)
+
+                color_path = os.path.join(self.save_dir, f"colour_{timestamp}.png")
+                col_img = self.bridge.imgmsg_to_cv2(self.latest_colour_image, desired_encoding='bgr8')
+                cv2.imwrite(color_path, col_img)
+
+                pc_path = os.path.join(self.save_dir, f"pointcloud_o3d_{timestamp}.ply")
+                o3d_pc = self.save_cloud_as_o3d(self.latest_point_cloud)
+                o3d.io.write_point_cloud(pc_path, o3d_pc)
+
+                raw_pc_path = os.path.join(self.save_dir, f"pointcloud_raw_{timestamp}.pkl")
+                with open(raw_pc_path, 'wb') as f:
+                    pickle.dump(self.latest_point_cloud, f)
+
+                response.success = True
+                self.get_logger().info("Saved snapshot")
+            except:
+                response.success = False
+                self.get_logger().info("Failed")
+            return response
+        return self.create_service(Trigger, '/zed_cam_snapshot', zed_snapshot, callback_group=self.serv_cb_group)
+    
+
+    # capture a fused point cloud over a specified time period
     def fused_point_cloud_timed_service(self):
         def fused_point_cloud_timed(request, response):
             self.want_fused_cloud = True
@@ -75,7 +162,7 @@ class ZedOperaterNode(Node):
             time.sleep(request.duration)
 
             while not self.latest_fused_point_cloud:
-               print("Still don't have cloud??")
+               self.get_logger().info("Still don't have cloud??")
             response.fused_cloud = self.latest_fused_point_cloud
             self.want_fused_cloud = False
             
@@ -113,9 +200,9 @@ class ZedOperaterNode(Node):
         if colors:
             o3d_pc.colors = o3d.utility.Vector3dVector(np.array(colors))
             
-        pc_path = '/local/zed_outs/fused_cloud_example.ply'
-        o3d.io.write_point_cloud(pc_path, o3d_pc)
-        return
+        # pc_path = '/local/zed_outs/fused_cloud_example.ply'
+        # o3d.io.write_point_cloud(pc_path, o3d_pc)
+        return o3d_pc
 
 
 def main(args=None):
