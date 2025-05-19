@@ -74,7 +74,7 @@ class ZedOperaterNode(Node):
         self.latest_depth_image = msg
         self.want_depth_image = False
 
-    def colur_image_callback(self, msg):
+    def colour_image_callback(self, msg):
         if not self.want_colour_image:
             return
         self.latest_colour_image = msg
