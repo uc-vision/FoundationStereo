@@ -50,7 +50,7 @@ class ZedOperaterNode(Node):
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
         self.bridge = CvBridge()
-        self.save_dir = '~/zed_out/'
+        self.save_dir = '/home/canterbury/zed_out/'
         
         self.want_depth_image = False
         self.latest_depth_image = None
@@ -60,6 +60,7 @@ class ZedOperaterNode(Node):
         self.latest_colour_image = None
         self.want_point_cloud = None
         self.latest_point_cloud = None
+        self.transform_dict = {}
 
         self.fused_point_cloud_timed_service()
         self.zed_snapshot_service()
@@ -99,12 +100,16 @@ class ZedOperaterNode(Node):
                 self.want_colour_image = True
                 self.want_depth_image = True
                 self.want_point_cloud = True
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                this_save_dir = self.save_dir + timestamp + '/'
+                os.makedirs(this_save_dir, exist_ok=True)
 
                 # get enu to zed cam transform
                 now = Time()
                 trans = self.tf_buffer.lookup_transform(
                 target_frame='zcam_link',
-                source_frame='local_enu',
+                # source_frame='local_enu',
+                source_frame='base_link',
                 time=now
                 )
                 self.get_logger().info(
@@ -117,35 +122,46 @@ class ZedOperaterNode(Node):
                 f"{trans.transform.rotation.z:.3f}, "
                 f"{trans.transform.rotation.w:.3f})"
                 )
+                self.transform_dict[timestamp] = trans
+                with open(os.path.join(self.save_dir, 'transforms.pkl'), 'wb') as f:
+                    pickle.dump(self.transform_dict, f)
 
                 # save locally
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")                
-
-                cv_depth_path = os.path.join(self.save_dir, f"depth_cv_{timestamp}.npy")
+                while not self.latest_depth_image:
+                    pass
+                cv_depth_path = os.path.join(this_save_dir, f"depth_cv_{timestamp}.npy")
                 cv_depth = self.bridge.imgmsg_to_cv2(self.latest_depth_image, desired_encoding='32FC1')
                 np.save(cv_depth_path, cv_depth)
 
-                raw_depth_path = os.path.join(self.save_dir, f"depth_raw_{timestamp}.pkl")
+                raw_depth_path = os.path.join(this_save_dir, f"depth_raw_{timestamp}.pkl")
                 with open(raw_depth_path, 'wb') as f:
                     pickle.dump(self.latest_depth_image, f)
 
-                color_path = os.path.join(self.save_dir, f"colour_{timestamp}.png")
+                while not self.latest_colour_image:
+                    pass
+                color_path = os.path.join(this_save_dir, f"colour_{timestamp}.png")
                 col_img = self.bridge.imgmsg_to_cv2(self.latest_colour_image, desired_encoding='bgr8')
                 cv2.imwrite(color_path, col_img)
-
-                pc_path = os.path.join(self.save_dir, f"pointcloud_o3d_{timestamp}.ply")
+                
+                while not self.latest_point_cloud:
+                    pass
+                pc_path = os.path.join(this_save_dir, f"pointcloud_o3d_{timestamp}.ply")
                 o3d_pc = self.save_cloud_as_o3d(self.latest_point_cloud)
                 o3d.io.write_point_cloud(pc_path, o3d_pc)
 
-                raw_pc_path = os.path.join(self.save_dir, f"pointcloud_raw_{timestamp}.pkl")
+                raw_pc_path = os.path.join(this_save_dir, f"pointcloud_raw_{timestamp}.pkl")
                 with open(raw_pc_path, 'wb') as f:
                     pickle.dump(self.latest_point_cloud, f)
 
                 response.success = True
-                self.get_logger().info("Saved snapshot")
+                self.get_logger().info(f"Saved snapshot to {this_save_dir}")
             except:
                 response.success = False
                 self.get_logger().info("Failed")
+
+            self.latest_colour_image = None
+            self.latest_depth_image = None
+            self.latest_point_cloud = None
             return response
         return self.create_service(Trigger, '/zed_cam_snapshot', zed_snapshot, callback_group=self.serv_cb_group)
     
