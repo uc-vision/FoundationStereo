@@ -28,7 +28,7 @@ class ZedOperaterNode(Node):
         super().__init__('zed_operator_node')
         
         depth_qos = rclpy.qos.QoSProfile(
-            reliability=rclpy.qos.ReliabilityPolicy.RELIABLE,
+            reliability=rclpy.qos.ReliabilityPolicy.BEST_EFFORT,
             durability=rclpy.qos.DurabilityPolicy.VOLATILE,
             depth=10
         )
@@ -38,6 +38,20 @@ class ZedOperaterNode(Node):
         self.fused_cloud = self.create_subscription(PointCloud2, '/zed/zed_node/mapping/fused_cloud', self.fused_cloud_callback, depth_qos)
         self.colour_image = self.create_subscription(Image, '/zed/zed_node/right/image_rect_color', self.colour_image_callback, depth_qos)
         self.point_cloud = self.create_subscription(PointCloud2, '/zed/zed_node/point_cloud/cloud_registered', self.point_cloud_callback, depth_qos)
+
+        self.right_sub = self.create_subscription(
+            Image,
+            '/zed/zed_node/right/image_rect_color',
+            self.image_right_rectified_callback,
+            qos_profile=depth_qos
+        )
+
+        self.left_sub = self.create_subscription(
+            Image,
+            '/zed/zed_node/left/image_rect_color',
+            self.image_left_rectified_callback,
+            qos_profile=depth_qos
+        )
         
         self.get_logger().info('1')
         self.fused_cloud_client = self.create_client(SetBool, '/zed/zed_node/enable_mapping')
@@ -61,6 +75,9 @@ class ZedOperaterNode(Node):
         self.want_point_cloud = None
         self.latest_point_cloud = None
         self.transform_dict = {}
+
+        self.want_right_img = False
+        self.want_left_img = False
 
         self.fused_point_cloud_timed_service()
         self.zed_snapshot_service()
@@ -96,68 +113,71 @@ class ZedOperaterNode(Node):
     # save zed data at time of service call
     def zed_snapshot_service(self):
         def zed_snapshot(request, response):
-            try:
-                self.want_colour_image = True
-                self.want_depth_image = True
-                self.want_point_cloud = True
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                this_save_dir = self.save_dir + timestamp + '/'
-                os.makedirs(this_save_dir, exist_ok=True)
+            # try:
+            self.want_colour_image = True
+            self.want_depth_image = True
+            self.want_point_cloud = True
+            self.want_fused_cloud = True
+            self.want_right_img = True
+            self.want_left_img = True
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            this_save_dir = self.save_dir + timestamp + '/'
+            os.makedirs(this_save_dir, exist_ok=True)
 
-                # get enu to zed cam transform
-                now = Time()
-                trans = self.tf_buffer.lookup_transform(
-                target_frame='zcam_link',
-                # source_frame='local_enu',
-                source_frame='base_link',
-                time=now
-                )
-                self.get_logger().info(
-                f"Got transform at time {trans.header.stamp.sec}.{trans.header.stamp.nanosec:09d}: "
-                f"translation = ({trans.transform.translation.x:.3f}, "
-                f"{trans.transform.translation.y:.3f}, "
-                f"{trans.transform.translation.z:.3f}), "
-                f"rotation (quat) = ({trans.transform.rotation.x:.3f}, "
-                f"{trans.transform.rotation.y:.3f}, "
-                f"{trans.transform.rotation.z:.3f}, "
-                f"{trans.transform.rotation.w:.3f})"
-                )
-                self.transform_dict[timestamp] = trans
-                with open(os.path.join(self.save_dir, 'transforms.pkl'), 'wb') as f:
-                    pickle.dump(self.transform_dict, f)
+            # get enu to zed cam transform
+            now = Time()
+            trans = self.tf_buffer.lookup_transform(
+            target_frame='zcam_link',
+            # source_frame='local_enu',
+            source_frame='base_link',
+            time=now
+            )
+            self.get_logger().info(
+            f"Got transform at time {trans.header.stamp.sec}.{trans.header.stamp.nanosec:09d}: "
+            f"translation = ({trans.transform.translation.x:.3f}, "
+            f"{trans.transform.translation.y:.3f}, "
+            f"{trans.transform.translation.z:.3f}), "
+            f"rotation (quat) = ({trans.transform.rotation.x:.3f}, "
+            f"{trans.transform.rotation.y:.3f}, "
+            f"{trans.transform.rotation.z:.3f}, "
+            f"{trans.transform.rotation.w:.3f})"
+            )
+            self.transform_dict[timestamp] = trans
+            with open(os.path.join(self.save_dir, 'transforms.pkl'), 'wb') as f:
+                pickle.dump(self.transform_dict, f)
 
-                # save locally
-                while not self.latest_depth_image:
-                    pass
-                cv_depth_path = os.path.join(this_save_dir, f"depth_cv_{timestamp}.npy")
-                cv_depth = self.bridge.imgmsg_to_cv2(self.latest_depth_image, desired_encoding='32FC1')
-                np.save(cv_depth_path, cv_depth)
+            # save locally
+            while not self.latest_depth_image:
+                pass
+            cv_depth_path = os.path.join(this_save_dir, f"depth_cv_{timestamp}.npy")
+            cv_depth = self.bridge.imgmsg_to_cv2(self.latest_depth_image, desired_encoding='32FC1')
+            np.save(cv_depth_path, cv_depth)
 
-                raw_depth_path = os.path.join(this_save_dir, f"depth_raw_{timestamp}.pkl")
-                with open(raw_depth_path, 'wb') as f:
-                    pickle.dump(self.latest_depth_image, f)
+            raw_depth_path = os.path.join(this_save_dir, f"depth_raw_{timestamp}.pkl")
+            with open(raw_depth_path, 'wb') as f:
+                pickle.dump(self.latest_depth_image, f)
 
-                while not self.latest_colour_image:
-                    pass
-                color_path = os.path.join(this_save_dir, f"colour_{timestamp}.png")
-                col_img = self.bridge.imgmsg_to_cv2(self.latest_colour_image, desired_encoding='bgr8')
-                cv2.imwrite(color_path, col_img)
-                
-                while not self.latest_point_cloud:
-                    pass
-                pc_path = os.path.join(this_save_dir, f"pointcloud_o3d_{timestamp}.ply")
-                o3d_pc = self.save_cloud_as_o3d(self.latest_point_cloud)
-                o3d.io.write_point_cloud(pc_path, o3d_pc)
+            while not self.latest_colour_image:
+                pass
+            color_path = os.path.join(this_save_dir, f"colour_{timestamp}.png")
+            col_img = self.bridge.imgmsg_to_cv2(self.latest_colour_image, desired_encoding='bgr8')
+            cv2.imwrite(color_path, col_img)
+            
+            while not self.latest_point_cloud:
+                pass
+            pc_path = os.path.join(this_save_dir, f"pointcloud_o3d_{timestamp}.ply")
+            o3d_pc = self.save_cloud_as_o3d(self.latest_point_cloud)
+            o3d.io.write_point_cloud(pc_path, o3d_pc)
 
-                raw_pc_path = os.path.join(this_save_dir, f"pointcloud_raw_{timestamp}.pkl")
-                with open(raw_pc_path, 'wb') as f:
-                    pickle.dump(self.latest_point_cloud, f)
+            raw_pc_path = os.path.join(this_save_dir, f"pointcloud_raw_{timestamp}.pkl")
+            with open(raw_pc_path, 'wb') as f:
+                pickle.dump(self.latest_point_cloud, f)
 
-                response.success = True
-                self.get_logger().info(f"Saved snapshot to {this_save_dir}")
-            except:
-                response.success = False
-                self.get_logger().info("Failed")
+            response.success = True
+            self.get_logger().info(f"Saved snapshot to {this_save_dir}")
+            # except:
+                # response.success = False
+                # self.get_logger().info("Failed")
 
             self.latest_colour_image = None
             self.latest_depth_image = None
@@ -189,6 +209,54 @@ class ZedOperaterNode(Node):
             self.save_cloud_as_o3d(self.latest_fused_point_cloud)
             return response
         return self.create_service(TimedCloud, '/fused_cloud_over_time', fused_point_cloud_timed, callback_group=self.serv_cb_group)
+    
+
+    def image_right_rectified_callback(self, msg: Image):
+        if not self.want_right_img:
+            return
+        
+        self.get_logger().info(
+            f"Right Rectified image received from ZED\tSize: {msg.width}x{msg.height} - "
+            f"Ts: {msg.header.stamp.sec}.{msg.header.stamp.nanosec:09d} sec"
+        )
+       
+        cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+
+        ts_sec = msg.header.stamp.sec
+        ts_nsec = msg.header.stamp.nanosec
+        filename = f"right_{ts_sec}_{ts_nsec:09d}.png"
+        filepath = os.path.join(self.save_dir, filename)
+
+        success = cv2.imwrite(filepath, cv_image)
+        if success:
+            self.get_logger().info(f"Saved right image: {filepath}")
+        else:
+            self.get_logger().error(f"Failed to save right image to {filepath}")
+        self.want_right_img = False
+
+
+    def image_left_rectified_callback(self, msg: Image):
+        if not self.want_left_img:
+            return
+        
+        self.get_logger().info(
+            f"Left  Rectified image received from ZED\tSize: {msg.width}x{msg.height} - "
+            f"Ts: {msg.header.stamp.sec}.{msg.header.stamp.nanosec:09d} sec"
+        )
+
+        cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+
+        ts_sec = msg.header.stamp.sec
+        ts_nsec = msg.header.stamp.nanosec
+        filename = f"left_{ts_sec}_{ts_nsec:09d}.png"
+        filepath = os.path.join(self.save_dir, filename)
+
+        success = cv2.imwrite(filepath, cv_image)
+        if success:
+            self.get_logger().info(f"Saved left image: {filepath}")
+        else:
+            self.get_logger().error(f"Failed to save left image to {filepath}")
+        self.want_left_img = False
 
 
     def save_cloud_as_o3d(self, cloud_msg):
