@@ -31,3 +31,6 @@
 [submodule "src/localisation_ros2"]
 	path = src/localisation_ros2
 	url = git@github.com:uc-vision/localisation_ros2.git
+[submodule "src/IGEV-plusplus"]
+	path = src/IGEV-plusplus
+	url = git@github.com:gangweix/IGEV-plusplus.git
