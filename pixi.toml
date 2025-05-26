@@ -38,6 +38,11 @@ cuda = "12.6.*"
 pycolmap = ">=3.11"
 ninja = ">=1.12.1,<2"
 matplotlib = ">=3.10.0,<4"
+mesa-libgl-devel-cos7-x86_64 = ">=18.3.4,<19"
+mesa-dri-drivers-cos7-x86_64 = ">=18.3.4,<19"
+libglvnd-glx-cos7-x86_64 = ">=1.0.1,<2"
+libglvnd-opengl-cos7-x86_64 = ">=1.0.1,<2"
+ros-humble-nav2-rviz-plugins = ">=1.1.17,<2"
 
 [pypi-options]
 index-url = "https://pypi.org/simple"
@@ -54,6 +59,7 @@ torchvision = { version = ">=0.21.0", index = "https://download.pytorch.org/whl/
 fused-ssim = { git = "https://github.com/uc-vision/fused-ssim.git", rev = "613400e" }
 small-gicp = "*"
 open3d = ">=0.19.0,<0.20"
+onnxruntime-gpu = ">=1.22.0, <2"
 
 [system-requirements]
 cuda = "12.1"
