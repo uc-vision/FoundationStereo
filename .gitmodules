@@ -31,3 +31,6 @@
 [submodule "src/IGEV-plusplus"]
 	path = src/IGEV-plusplus
 	url = git@github.com:gangweix/IGEV-plusplus.git
+[submodule "src/zed-ros-wrapper"]
+	path = src/zed-ros-wrapper
+	url = git@github.com:drewdewet/zed-ros2-wrapper.git
