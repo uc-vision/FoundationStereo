@@ -4,9 +4,6 @@
 [submodule "src/robotic_arm"]
 	path = src/robotic_arm
 	url = git@github.com:uc-vision/robotic_arm.git
-[submodule "src/zed-ros-wrapper"]
-	path = src/zed-ros-wrapper
-	url = https://github.com/stereolabs/zed-ros2-wrapper.git
 [submodule "src/nmea_msgs"]
 	path = src/nmea_msgs
 	url = https://github.com/ros-drivers/nmea_msgs.git
