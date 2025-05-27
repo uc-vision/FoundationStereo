@@ -15,12 +15,15 @@ import time
 import struct
 import open3d as o3d
 from std_srvs.srv import SetBool
+from std_msgs.msg import Bool
 import pickle
 import open3d as o3d
 from arm_interfaces.srv import TimedCloud
 from tf2_ros import Buffer, TransformListener
 from tf2_ros import LookupException, ConnectivityException, ExtrapolationException
 from rclpy.time import Time
+import onnxruntime as ort
+from zed_operator import inference
 
 
 class ZedOperaterNode(Node):
@@ -38,6 +41,9 @@ class ZedOperaterNode(Node):
         self.fused_cloud = self.create_subscription(PointCloud2, '/zed/zed_node/mapping/fused_cloud', self.fused_cloud_callback, depth_qos)
         self.colour_image = self.create_subscription(Image, '/zed/zed_node/right/image_rect_color', self.colour_image_callback, depth_qos)
         self.point_cloud = self.create_subscription(PointCloud2, '/zed/zed_node/point_cloud/cloud_registered', self.point_cloud_callback, depth_qos)
+
+        self.make_point_cloud = self.create_subscription(Bool, '/make_point_cloud', self.make_point_cloud_callback, depth_qos)
+        self.point_cloud_publisher = self.create_publisher(PointCloud2, '/foundation_stereo_cloud', depth_qos)
 
         self.right_sub = self.create_subscription(
             Image,
@@ -78,9 +84,18 @@ class ZedOperaterNode(Node):
 
         self.want_right_img = False
         self.want_left_img = False
+        self.save_side_imgs = True
+        self.left_img = None
+        self.right_img = None
+        self.timestamp = None
+        self.this_save_dir = None
 
         self.fused_point_cloud_timed_service()
         self.zed_snapshot_service()
+
+        # self.get_logger().info("starting onnx session")
+        # self.ort_session = ort.InferenceSession('/home/canterbury/stereo_model/foundation_stereo_960.onnx',
+        #                            providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
 
         self.get_logger().info("Zed operator node initialised")
 
@@ -110,9 +125,25 @@ class ZedOperaterNode(Node):
         self.latest_fused_point_cloud = msg
 
 
+    # get FoundationStereo inferenced point cloud
+    def make_point_cloud_callback(self, msg):
+        self.want_left_img = True
+        self.want_right_img = True
+
+        # do inference with foundation stereo model
+        inference.onnx_inference(self.ort_session)
+
+        # convert to PointCloud2 and publish with time stamp
+
+
     # save zed data at time of service call
     def zed_snapshot_service(self):
         def zed_snapshot(request, response):
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            this_save_dir = self.save_dir + timestamp + '/'
+            os.makedirs(this_save_dir, exist_ok=True)
+            self.timestamp = timestamp
+            self.this_save_dir = this_save_dir
             # try:
             self.want_colour_image = True
             self.want_depth_image = True
@@ -120,16 +151,13 @@ class ZedOperaterNode(Node):
             self.want_fused_cloud = True
             self.want_right_img = True
             self.want_left_img = True
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            this_save_dir = self.save_dir + timestamp + '/'
-            os.makedirs(this_save_dir, exist_ok=True)
 
             # get enu to zed cam transform
             now = Time()
             trans = self.tf_buffer.lookup_transform(
             target_frame='zcam_link',
-            # source_frame='local_enu',
-            source_frame='base_link',
+            source_frame='local_enu',
+            # source_frame='base_link',
             time=now
             )
             self.get_logger().info(
@@ -221,17 +249,19 @@ class ZedOperaterNode(Node):
         )
        
         cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+        self.right_img = cv_image
 
-        ts_sec = msg.header.stamp.sec
-        ts_nsec = msg.header.stamp.nanosec
-        filename = f"right_{ts_sec}_{ts_nsec:09d}.png"
-        filepath = os.path.join(self.save_dir, filename)
+        if self.save_side_imgs:
+            # ts_sec = msg.header.stamp.sec
+            # ts_nsec = msg.header.stamp.nanosec
+            filename = f"right_{self.timestamp}.png"
+            filepath = os.path.join(self.this_save_dir, filename)
 
-        success = cv2.imwrite(filepath, cv_image)
-        if success:
-            self.get_logger().info(f"Saved right image: {filepath}")
-        else:
-            self.get_logger().error(f"Failed to save right image to {filepath}")
+            success = cv2.imwrite(filepath, cv_image)
+            if success:
+                self.get_logger().info(f"Saved right image: {filepath}")
+            else:
+                self.get_logger().error(f"Failed to save right image to {filepath}")
         self.want_right_img = False
 
 
@@ -245,17 +275,19 @@ class ZedOperaterNode(Node):
         )
 
         cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+        self.left_img = cv_image
 
-        ts_sec = msg.header.stamp.sec
-        ts_nsec = msg.header.stamp.nanosec
-        filename = f"left_{ts_sec}_{ts_nsec:09d}.png"
-        filepath = os.path.join(self.save_dir, filename)
+        if self.save_side_imgs:
+            # ts_sec = msg.header.stamp.sec
+            # ts_nsec = msg.header.stamp.nanosec
+            filename = f"left_{self.timestamp}.png"
+            filepath = os.path.join(self.this_save_dir, filename)
 
-        success = cv2.imwrite(filepath, cv_image)
-        if success:
-            self.get_logger().info(f"Saved left image: {filepath}")
-        else:
-            self.get_logger().error(f"Failed to save left image to {filepath}")
+            success = cv2.imwrite(filepath, cv_image)
+            if success:
+                self.get_logger().info(f"Saved left image: {filepath}")
+            else:
+                self.get_logger().error(f"Failed to save left image to {filepath}")
         self.want_left_img = False
 
 

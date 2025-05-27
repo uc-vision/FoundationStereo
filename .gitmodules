@@ -4,9 +4,6 @@
 [submodule "src/robotic_arm"]
 	path = src/robotic_arm
 	url = git@github.com:uc-vision/robotic_arm.git
-[submodule "src/zed-ros-wrapper"]
-	path = src/zed-ros-wrapper
-	url = https://github.com/stereolabs/zed-ros2-wrapper.git
 [submodule "src/nmea_msgs"]
 	path = src/nmea_msgs
 	url = https://github.com/ros-drivers/nmea_msgs.git
@@ -31,3 +28,9 @@
 [submodule "src/localisation_ros2"]
 	path = src/localisation_ros2
 	url = git@github.com:uc-vision/localisation_ros2.git
+[submodule "src/IGEV-plusplus"]
+	path = src/IGEV-plusplus
+	url = git@github.com:gangweix/IGEV-plusplus.git
+[submodule "src/zed-ros-wrapper"]
+	path = src/zed-ros-wrapper
+	url = git@github.com:drewdewet/zed-ros2-wrapper.git
