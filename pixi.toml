@@ -38,6 +38,9 @@ cuda = "12.6.*"
 pycolmap = ">=3.11"
 ninja = ">=1.12.1,<2"
 matplotlib = ">=3.10.0,<4"
+numba = ">=0.61.2,<0.62"
+scikit-image = ">=0.25.2,<0.26"
+pycuda = ">=2024.1,<2025"
 
 [pypi-options]
 index-url = "https://pypi.org/simple"
