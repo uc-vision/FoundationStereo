@@ -37,3 +37,6 @@
 [submodule "src/tsdf-fusion-python"]
 	path = src/tsdf-fusion-python
 	url = git@github.com:andyzeng/tsdf-fusion-python.git
+[submodule "src/trunk-segmentation"]
+	path = src/trunk-segmentation
+	url = git@github.com:uc-vision/trunk-segmentation.git
