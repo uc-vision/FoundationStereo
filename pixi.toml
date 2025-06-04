@@ -43,6 +43,7 @@ mesa-dri-drivers-cos7-x86_64 = ">=18.3.4,<19"
 libglvnd-glx-cos7-x86_64 = ">=1.0.1,<2"
 libglvnd-opengl-cos7-x86_64 = ">=1.0.1,<2"
 ros-humble-nav2-rviz-plugins = ">=1.1.17,<2"
+scikit-image = "0.21.0.*"
 
 [pypi-options]
 index-url = "https://pypi.org/simple"
@@ -60,6 +61,7 @@ fused-ssim = { git = "https://github.com/uc-vision/fused-ssim.git", rev = "61340
 small-gicp = "*"
 open3d = ">=0.19.0,<0.20"
 onnxruntime-gpu = ">=1.22.0, <2"
+timm = "==0.5.4"
 
 [system-requirements]
 cuda = "12.1"
