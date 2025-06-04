@@ -3,11 +3,11 @@
 ## Overview
 A collection of modules for robotic pruning operations on a UCVision rover. 
 
-**GS-Localisation**: Precise robot localisation and alignment with 3D Gaussian Splatting reconstruction. 
+**trunk-segmentation**: Denoises and extracts the trunk (+ suitable vines) from the RGBD pointcloud of the vineyard scene.  
 
-**localisation_ros2**: ROS2 wrapper for GS-Localisation. Publishes pose corrections to ROS2 TF tree.  
+**GS-Localisation**: Robot localisation and alignment with 3DGS reconstruction using extracted vine pointcloud. 
 
-
+**localisation_ros2**: ROS2 wrapper for trunk-segmentation and GS-Localisation packages. Publishes pose corrections to ROS2 TF tree.  
 
 # Installing 
 

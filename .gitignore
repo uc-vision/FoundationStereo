@@ -4,3 +4,8 @@ log/
 # pixi environments
 .pixi
 *.egg-info
+
+scripts/data/
+scripts/*.ply
+*/__pycache__
+
