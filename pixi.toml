@@ -43,7 +43,9 @@ mesa-dri-drivers-cos7-x86_64 = ">=18.3.4,<19"
 libglvnd-glx-cos7-x86_64 = ">=1.0.1,<2"
 libglvnd-opengl-cos7-x86_64 = ">=1.0.1,<2"
 ros-humble-nav2-rviz-plugins = ">=1.1.17,<2"
-scikit-image = "0.21.0.*"
+numba = ">=0.61.2,<0.62"
+scikit-image = ">=0.25.2,<0.26"
+pycuda = ">=2024.1,<2025"
 
 [pypi-options]
 index-url = "https://pypi.org/simple"
