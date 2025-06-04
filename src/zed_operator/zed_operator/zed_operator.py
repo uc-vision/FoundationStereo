@@ -4,6 +4,7 @@ from rclpy.executors import MultiThreadedExecutor
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from sensor_msgs.msg import Image, PointCloud2
 import sensor_msgs_py.point_cloud2 as pc2
+from geometry_msgs.msg import PoseStamped
 from std_srvs.srv import Trigger
 from cv_bridge import CvBridge
 import cv2
@@ -41,6 +42,7 @@ class ZedOperaterNode(Node):
         self.fused_cloud = self.create_subscription(PointCloud2, '/zed/zed_node/mapping/fused_cloud', self.fused_cloud_callback, depth_qos)
         self.colour_image = self.create_subscription(Image, '/zed/zed_node/right/image_rect_color', self.colour_image_callback, depth_qos)
         self.point_cloud = self.create_subscription(PointCloud2, '/zed/zed_node/point_cloud/cloud_registered', self.point_cloud_callback, depth_qos)
+        self.zed_pose = self.create_subscription(PoseStamped, '/zed/zed_node/pose', self.zed_pose_callback, depth_qos)
 
         self.make_point_cloud = self.create_subscription(Bool, '/make_point_cloud', self.make_point_cloud_callback, depth_qos)
         self.point_cloud_publisher = self.create_publisher(PointCloud2, '/foundation_stereo_cloud', depth_qos)
@@ -70,7 +72,7 @@ class ZedOperaterNode(Node):
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
         self.bridge = CvBridge()
-        self.save_dir = '/home/canterbury/zed_out/'
+        self.save_dir = '/home/canterbury/zed_out/outside/'
         
         self.want_depth_image = False
         self.latest_depth_image = None
@@ -81,6 +83,8 @@ class ZedOperaterNode(Node):
         self.want_point_cloud = None
         self.latest_point_cloud = None
         self.transform_dict = {}
+        self.want_zed_pose = False
+        self.latest_zed_pose = None
 
         self.want_right_img = False
         self.want_left_img = False
@@ -124,6 +128,11 @@ class ZedOperaterNode(Node):
             return
         self.latest_fused_point_cloud = msg
 
+    def zed_pose_callback(self, msg):
+        if not self.want_zed_pose:
+            return
+        self.latest_zed_pose = msg
+        self.want_zed_pose = False
 
     # get FoundationStereo inferenced point cloud
     def make_point_cloud_callback(self, msg):
@@ -151,13 +160,14 @@ class ZedOperaterNode(Node):
             self.want_fused_cloud = True
             self.want_right_img = True
             self.want_left_img = True
+            # self.want_zed_pose = True
 
             # get enu to zed cam transform
             now = Time()
             trans = self.tf_buffer.lookup_transform(
-            target_frame='zcam_link',
+            # target_frame='zcam_link',
             source_frame='local_enu',
-            # source_frame='base_link',
+            source_frame='base_link',
             time=now
             )
             self.get_logger().info(
@@ -170,9 +180,14 @@ class ZedOperaterNode(Node):
             f"{trans.transform.rotation.z:.3f}, "
             f"{trans.transform.rotation.w:.3f})"
             )
+
+            # while not self.latest_zed_pose:
+            #     pass
+            # self.transform_dict[timestamp] = self.latest_zed_pose
             self.transform_dict[timestamp] = trans
             with open(os.path.join(self.save_dir, 'transforms.pkl'), 'wb') as f:
                 pickle.dump(self.transform_dict, f)
+            self.get_logger().info(f"Saved zed pose {self.latest_zed_pose} at {timestamp}")
 
             # save locally
             while not self.latest_depth_image:
