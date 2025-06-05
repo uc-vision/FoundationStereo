@@ -46,6 +46,7 @@ ros-humble-nav2-rviz-plugins = ">=1.1.17,<2"
 numba = ">=0.61.2,<0.62"
 scikit-image = ">=0.25.2,<0.26"
 pycuda = ">=2024.1,<2025"
+omegaconf = ">=2.3.0,<3"
 
 [pypi-options]
 index-url = "https://pypi.org/simple"
@@ -63,6 +64,11 @@ fused-ssim = { git = "https://github.com/uc-vision/fused-ssim.git", rev = "61340
 small-gicp = "*"
 open3d = ">=0.19.0,<0.20"
 onnxruntime-gpu = ">=1.22.0, <2"
+timm = ">=1.0.15, <2"
+transformations = ">=2025.1.1, <2026"
+einops = ">=0.8.1, <0.9"
+flash-attn = ">=2.7.4.post1, <3"
+huggingface-hub = ">=0.32.4, <0.33"
 
 [system-requirements]
 cuda = "12.1"
