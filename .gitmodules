@@ -40,3 +40,6 @@
 [submodule "src/trunk-segmentation"]
 	path = src/trunk-segmentation
 	url = git@github.com:uc-vision/trunk-segmentation.git
+[submodule "src/FoundationStereo"]
+	path = src/FoundationStereo
+	url = git@github.com:NVlabs/FoundationStereo.git

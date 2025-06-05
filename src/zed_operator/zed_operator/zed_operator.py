@@ -4,6 +4,7 @@ from rclpy.executors import MultiThreadedExecutor
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from sensor_msgs.msg import Image, PointCloud2
 import sensor_msgs_py.point_cloud2 as pc2
+from std_msgs.msg import Header
 from geometry_msgs.msg import PoseStamped
 from std_srvs.srv import Trigger
 from cv_bridge import CvBridge
@@ -24,7 +25,8 @@ from tf2_ros import Buffer, TransformListener
 from tf2_ros import LookupException, ConnectivityException, ExtrapolationException
 from rclpy.time import Time
 import onnxruntime as ort
-from zed_operator import inference
+from zed_operator import inference, FSwrapper
+from open3d_ros_helper import open3d_ros_helper as orh
 
 
 class ZedOperaterNode(Node):
@@ -101,6 +103,10 @@ class ZedOperaterNode(Node):
         # self.ort_session = ort.InferenceSession('/home/canterbury/stereo_model/foundation_stereo_960.onnx',
         #                            providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
 
+        self.get_logger().info("Initialising FoundationStereo model")
+        self.FS_wrapper = FSwrapper.FSWrapper()
+        self.FS_wrapper.instantiate_model()
+
         self.get_logger().info("Zed operator node initialised")
 
     
@@ -138,11 +144,32 @@ class ZedOperaterNode(Node):
     def make_point_cloud_callback(self, msg):
         self.want_left_img = True
         self.want_right_img = True
+        while not (self.left_img is not None and self.right_img is not None):
+            pass
+        time_stamp = self.get_clock().now().to_msg()
 
         # do inference with foundation stereo model
-        inference.onnx_inference(self.ort_session)
+        # inference.onnx_inference(self.ort_session)
+        pcd, depth = self.FS_wrapper.run_inference(
+            left_img=self.left_img,
+            right_img=self.right_img,
+        )
+        self.get_logger().info("Got point cloud from FoundationStereo model")
+        self.get_logger().info(f"Point cloud has {len(pcd.points)} points")
 
         # convert to PointCloud2 and publish with time stamp
+        header = Header()
+        header.stamp = time_stamp
+        header.frame_id = 'zcam_link'
+
+        cloud_msg = pc2.create_cloud_xyz32(header, np.asarray(pcd.points))
+
+        self.get_logger().info(str(cloud_msg))
+
+        self.point_cloud_publisher.publish(cloud_msg)
+
+        self.left_img = None
+        self.right_img = None
 
 
     # save zed data at time of service call
