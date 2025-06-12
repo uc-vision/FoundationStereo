@@ -43,3 +43,6 @@
 [submodule "src/FoundationStereo"]
 	path = src/FoundationStereo
 	url = git@github.com:NVlabs/FoundationStereo.git
+[submodule "src/zed_operator"]
+	path = src/zed_operator
+	url = git@github.com:uc-vision/zed_operator.git

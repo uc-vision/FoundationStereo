@@ -51,7 +51,7 @@ omegaconf = ">=2.3.0,<3"
 [pypi-options]
 index-url = "https://pypi.org/simple"
 no-build-isolation = ["fused-ssim"]
-extra-index-urls = ["http://csse-maaratech1.canterbury.ac.nz:4040/maara/cstack/+simple/"]
+#extra-index-urls = ["http://csse-maaratech1.canterbury.ac.nz:4040/maara/cstack/+simple/"]
 
 [pypi-dependencies]
 py-structs = ">=1.1.0,<4"
