@@ -46,3 +46,6 @@
 [submodule "src/zed_operator"]
 	path = src/zed_operator
 	url = git@github.com:uc-vision/zed_operator.git
+[submodule "src/zed_op_interfaces"]
+	path = src/zed_op_interfaces
+	url = git@github.com:uc-vision/zed_op_interfaces.git
