@@ -52,3 +52,6 @@
 [submodule "src/stereo-wrapper"]
 	path = src/stereo-wrapper
 	url = git@github.com:uc-vision/stereo-wrapper.git
+[submodule "src/zed_operator_interfaces"]
+	path = src/zed_operator_interfaces
+	url = git@github.com:uc-vision/zed_operator_interfaces.git
