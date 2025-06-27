@@ -55,3 +55,6 @@
 [submodule "src/zed_operator_interfaces"]
 	path = src/zed_operator_interfaces
 	url = git@github.com:uc-vision/zed_operator_interfaces.git
+[submodule "src/pruning_vision_pipeline"]
+	path = src/pruning_vision_pipeline
+	url = git@github.com:uc-vision/pruning_vision_pipeline.git
