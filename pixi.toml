@@ -4,6 +4,9 @@ name = "pruning_workspace"
 platforms = ["linux-64"]
 version = "0.1.0"
 
+[activation]
+scripts = ["install/setup.sh", "env_setup.sh"]
+
 [tasks]
 
 [dependencies]
