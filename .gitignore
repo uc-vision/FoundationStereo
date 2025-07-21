@@ -1,0 +1,9 @@
+pretrained_models/*
+output/*
+*.pyc
+weight/
+__pycache__
+DATA/*
+build/
+*.egg-info
+foundation_stereo/pretrained_models/*
