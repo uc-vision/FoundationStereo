@@ -13,42 +13,43 @@
 [submodule "src/zed_interfaces"]
 	path = src/zed_interfaces
 	url = git@github.com:stereolabs/zed-ros2-interfaces.git
-[submodule "src/splat-viewer"]
-	path = src/splat-viewer
-	url = git@github.com:uc-vision/splat-viewer.git
-[submodule "src/taichi-splatting"]
-	path = src/taichi-splatting
-	url = git@github.com:uc-vision/taichi-splatting.git
-[submodule "GS-localisation"]
-	path = GS-localisation
-	url = git@github.com:uc-vision/GS-localisation.git
-[submodule "src/GS-localisation"]
-	path = src/GS-localisation
-	url = git@github.com:uc-vision/GS-localisation.git
 [submodule "src/localisation_ros2"]
 	path = src/localisation_ros2
 	url = git@github.com:uc-vision/localisation_ros2.git
-[submodule "src/zed-ros-wrapper"]
-	path = src/zed-ros-wrapper
-	url = git@github.com:uc-vision/zed-ros2-wrapper.git
-[submodule "src/trunk-segmentation"]
-	path = src/trunk-segmentation
-	url = git@github.com:uc-vision/trunk-segmentation.git
-[submodule "src/FoundationStereo"]
-	path = src/FoundationStereo
-	url = git@github.com:NVlabs/FoundationStereo.git
 [submodule "src/zed_operator"]
 	path = src/zed_operator
 	url = git@github.com:uc-vision/zed_operator.git
 [submodule "src/zed_op_interfaces"]
 	path = src/zed_op_interfaces
 	url = git@github.com:uc-vision/zed_op_interfaces.git
-[submodule "src/stereo-wrapper"]
-	path = src/stereo-wrapper
-	url = git@github.com:uc-vision/stereo-wrapper.git
 [submodule "src/zed_operator_interfaces"]
 	path = src/zed_operator_interfaces
 	url = git@github.com:uc-vision/zed_operator_interfaces.git
 [submodule "src/pruning_vision_pipeline"]
 	path = src/pruning_vision_pipeline
 	url = git@github.com:uc-vision/pruning_vision_pipeline.git
+[submodule "src/zed-ros-wrapper"]
+	path = src/zed-ros-wrapper
+	url = git@github.com:uc-vision/zed-ros2-wrapper.git
+
+[submodule "src/FoundationStereo"]
+	path = src/FoundationStereo
+	url = git@github.com:uc-vision/FoundationStereo.git
+[submodule "src/splat-viewer"]
+	path = src/splat-viewer
+	url = git@github.com:uc-vision/splat-viewer.git
+[submodule "src/taichi-splatting"]
+	path = src/taichi-splatting
+	url = git@github.com:uc-vision/taichi-splatting.git
+[submodule "src/GS-localisation"]
+	path = src/GS-localisation
+	url = git@github.com:uc-vision/GS-localisation.git
+[submodule "src/GS-localisation"]
+	path = src/GS-localisation
+	url = git@github.com:uc-vision/GS-localisation.git
+[submodule "src/trunk-segmentation"]
+	path = src/trunk-segmentation
+	url = git@github.com:uc-vision/trunk-segmentation.git
+[submodule "src/stereo-wrapper"]
+	path = src/stereo-wrapper
+	url = git@github.com:uc-vision/stereo-wrapper.git

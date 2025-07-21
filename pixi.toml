@@ -62,9 +62,13 @@ no-build-isolation = ["fused-ssim", "flash-attn"]
 
 [pypi-dependencies]
 py-structs = ">=1.1.0,<4"
-splat-viewer = { path = "src/splat-viewer", editable = true }
+foundation_stereo = { path = "src/FoundationStereo", editable = true }
 taichi-splatting = { path = "src/taichi-splatting", editable = true }
+stereo-wrapper = { path = "src/stereo-wrapper", editable = true }
 GS-localisation = { path = "src/GS-localisation", editable = true }
+trunk-segmentation = { path = "src/trunk-segmentation", editable = true }
+splat-viewer = { path = "src/splat-viewer", editable = true }
+
 torch = { version = "==2.6.0", index = "https://download.pytorch.org/whl/cu126" }
 torchvision = { version = ">=0.21.0", index = "https://download.pytorch.org/whl/cu126" }
 fused-ssim = { git = "https://github.com/uc-vision/fused-ssim.git", rev = "613400e" }
@@ -76,6 +80,8 @@ transformations = ">=2025.1.1, <2026"
 einops = ">=0.8.1, <0.9"
 flash-attn = ">=2.7.4.post1, <3"
 huggingface-hub = ">=0.32.4, <0.33"
+# Pin dinov2 to a specific working commit
+# dinov2 = { git = "https://github.com/facebookresearch/dinov2.git", rev = "e1277af" }
 
 [system-requirements]
 cuda = "12.1"

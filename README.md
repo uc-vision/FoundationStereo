@@ -22,7 +22,12 @@ git clone --recurse-submodules git@github.com:uc-vision/pruning_workspace.git
   
 ```
 
-2. Activate pixi 
+2. Setup DINOv2 compatibility (required for depth estimation)
+```
+./setup_dinov2.sh
+```
+
+3. Activate pixi 
 ```
 pixi shell
 
