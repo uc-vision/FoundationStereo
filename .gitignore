@@ -5,6 +5,9 @@ log/
 .pixi
 *.egg-info
 
+# DINOv2 local setup
+torchhub/
+
 scripts/data/
 scripts/*.ply
 */__pycache__
