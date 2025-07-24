@@ -8,6 +8,7 @@ version = "0.1.0"
 scripts = ["install/setup.sh", "env_setup.sh"]
 
 [tasks]
+pipeline = "ros2 launch pruning_vision_pipeline pruning_vision_pipeline.launch.py"
 run_zed = "taskset --cpu-list 3-15 ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zedm"
 baggin_time = "./src/zed_operator/scripts/record_bag.sh"
 build = "colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release --parallel-workers $(nproc)"
