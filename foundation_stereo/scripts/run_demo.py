@@ -22,7 +22,7 @@ if __name__=="__main__":
   parser.add_argument('--left_file', default=f'{code_dir}/../assets/left.png', type=str)
   parser.add_argument('--right_file', default=f'{code_dir}/../assets/right.png', type=str)
   parser.add_argument('--intrinsic_file', default=f'{code_dir}/../assets/K.txt', type=str, help='camera intrinsic matrix and baseline file')
-  parser.add_argument('--ckpt_dir', default=f'{code_dir}/../pretrained_models/23-51-11/model_best_bp2.pth', type=str, help='pretrained model path')
+  parser.add_argument('--ckpt_dir', default=f'/home/canterbury/ros2-workspace/pruning_workspace/src/FoundationStereo/foundation_stereo/pretrained_models/23-51-11/model_best_bp2-001.pth', type=str, help='pretrained model path')
   parser.add_argument('--out_dir', default=f'{code_dir}/../output/', type=str, help='the directory to save results')
   parser.add_argument('--scale', default=1, type=float, help='downsize the image by scale, must be <=1')
   parser.add_argument('--hiera', default=0, type=int, help='hierarchical inference (only needed for high-resolution images (>1K))')
@@ -52,7 +52,7 @@ if __name__=="__main__":
 
   model = FoundationStereo(args)
 
-  ckpt = torch.load(ckpt_dir)
+  ckpt = torch.load(ckpt_dir, weights_only=False)
   logging.info(f"ckpt global_step:{ckpt['global_step']}, epoch:{ckpt['epoch']}")
   model.load_state_dict(ckpt['model'])
 
@@ -75,7 +75,7 @@ if __name__=="__main__":
   padder = InputPadder(img0.shape, divis_by=32, force_square=False)
   img0, img1 = padder.pad(img0, img1)
 
-  with torch.amp.autocast('cuda', True):
+  with torch.amp.autocast('cuda', enabled=True):
     if not args.hiera:
       disp = model.forward(img0, img1, iters=args.valid_iters, test_mode=True)
     else:
