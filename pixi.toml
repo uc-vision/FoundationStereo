@@ -12,6 +12,8 @@ pipeline = "ros2 launch pruning_vision_pipeline pruning_vision_pipeline.launch.p
 run_zed = "taskset --cpu-list 3-15 ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zedm"
 baggin_time = "./src/zed_operator/scripts/record_bag.sh"
 build = "colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release --parallel-workers $(nproc)"
+tf = "python3 scripts/show_tf.py"
+capture = "python3 src/zed_operator/scripts/test_zed_client.py"
 
 [dependencies]
 python = "3.11.11.*"
