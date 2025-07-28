@@ -7,3 +7,4 @@ DATA/*
 build/
 *.egg-info
 foundation_stereo/pretrained_models/*
+foundation_stereo/output/*
