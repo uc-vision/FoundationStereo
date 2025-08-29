@@ -54,26 +54,34 @@ def toOpen3dCloud(points,colors=None,normals=None):
 
 
 def depth2xyzmap(depth:np.ndarray, K, uvs:np.ndarray=None, zmin=0.1):
-  invalid_mask = (depth<zmin)
-  H,W = depth.shape[:2]
+  depth_precise = depth.astype(np.float64)
+  K_precise = K.astype(np.float64)
+  
+  invalid_mask = (depth_precise < zmin) | ~np.isfinite(depth_precise)
+  H, W = depth.shape[:2]
+  
   if uvs is None:
-    vs,us = np.meshgrid(np.arange(0,H),np.arange(0,W), sparse=False, indexing='ij')
+    vs, us = np.meshgrid(np.arange(0, H), np.arange(0, W), sparse=False, indexing='ij')
     vs = vs.reshape(-1)
     us = us.reshape(-1)
   else:
-    uvs = uvs.round().astype(int)
-    us = uvs[:,0]
-    vs = uvs[:,1]
-  zs = depth[vs,us]
-  xs = (us-K[0,2])*zs/K[0,0]
-  ys = (vs-K[1,2])*zs/K[1,1]
-  pts = np.stack((xs.reshape(-1),ys.reshape(-1),zs.reshape(-1)), 1)  #(N,3)
-  xyz_map = np.zeros((H,W,3), dtype=np.float32)
-  xyz_map[vs,us] = pts
+    uvs = uvs.round().astype(np.int64)
+    us = uvs[:, 0]
+    vs = uvs[:, 1]
+  
+  zs = depth_precise[vs, us]
+  xs = (us - K_precise[0, 2]) * zs / K_precise[0, 0]
+  ys = (vs - K_precise[1, 2]) * zs / K_precise[1, 1]
+  
+  pts = np.stack((xs.reshape(-1), ys.reshape(-1), zs.reshape(-1)), 1)
+  
+  xyz_map = np.zeros((H, W, 3), dtype=np.float64)
+  xyz_map[vs, us] = pts
+
   if invalid_mask.any():
     xyz_map[invalid_mask] = 0
+      
   return xyz_map
-
 
 
 def freeze_model(model):
